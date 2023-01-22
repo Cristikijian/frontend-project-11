@@ -35,12 +35,17 @@ const app = async() => {
         posts: [],
     };
 
+    setLocale({
+        mixed: {
+          notOneOf: 'errors.urlExist',
+          
+        },
+        string: {
+            url: 'errors.notUrl',
+        }
+    });
+
     const validate = (field) => {
-        setLocale({
-            mixed: {
-              notOneOf: i18nInstance.t('errors.urlExist'),
-            },}
-        );
         return yup.string().trim().required().url().notOneOf(state.existedUrls).validate(field);
     };
     
@@ -68,9 +73,10 @@ const app = async() => {
             elements.input.value = '';
             elements.input.focus();
         })
-        .catch(() =>{
+        .catch((err) =>{
             elements.input.classList.add('is-invalid');
-            elements.feedback.textContent = i18nInstance.t('errors.notUrl');
+            elements.feedback.classList.add('text-danger');
+            elements.feedback.textContent = err.errors.map((errorKey) => i18nInstance.t(errorKey)).join("\n");
             console.log(state.existedUrls);
         });
         
