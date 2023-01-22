@@ -6,8 +6,9 @@ import { Button } from 'bootstrap';
 
 import onChange from 'on-change';
 import *as yup from 'yup';
+import { object, string, setLocale } from 'yup';
 import i18n from 'i18next';
-import resources from './locales/index.js';
+import resources from '../locales/index.js';
 import render from './view';
 
 
@@ -30,32 +31,52 @@ const app = async() => {
             state: 'initial',
             error: null,
         },
+        existedUrls: [],
         posts: [],
     };
 
-
-    const schema = yup.string().trim().required().url().notOneOf(existedUrls, url);
-
-    const validate = async(field) => {
-        return schema.validate(field).then().catch();
+    const validate = (field) => {
+        setLocale({
+            mixed: {
+              notOneOf: i18nInstance.t('errors.urlExist'),
+            },}
+        );
+        return yup.string().trim().required().url().notOneOf(state.existedUrls).validate(field);
     };
-
+    
     const elements = {
         formEl: document.querySelector('form'),
         postsContainer: document.querySelector('.container-xxl'),
+        input: document.getElementById('url-input'),
+        feedback: document.querySelector('.feedback'),
     };
 
     elements.formEl.addEventListener('submit', (e) => {
         e.preventDefault();
+        i18nInstance.t('notUrl');
+        console.log(elements.formEl);
         const formData = new FormData(e.target);
         const url = formData.get('url');
-        const existedUrls = [];
-        if(validate(existedUrls, url).then()) {
-            elements.formEl.classList.add('is-invalid');
-        }; //создать список существующих 
+        
+        
+        validate(url).then((validUrl) => {
+            elements.input.classList.add('is-valid');
+            elements.feedback.classList.remove('text-danger');
+            elements.feedback.classList.add('text-success');
+            state.existedUrls.push(url);
+            elements.feedback.textContent = i18nInstance.t('successLoad');
+            elements.input.value = '';
+            elements.input.focus();
+        })
+        .catch(() =>{
+            elements.input.classList.add('is-invalid');
+            elements.feedback.textContent = i18nInstance.t('errors.notUrl');
+            console.log(state.existedUrls);
+        });
+        
     });
 
-    elements.posts.container.addEventListener('click', (e) => {
+    elements.postsContainer.addEventListener('click', (e) => {
 
     });
 
@@ -63,5 +84,7 @@ const app = async() => {
     //     render(watchedState, elements, i18nInstance);
     //   });
 }
+
+app();
 
 export default app;

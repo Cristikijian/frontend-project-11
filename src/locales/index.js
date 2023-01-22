@@ -1,3 +1,3 @@
 import ru from './ru.js';
 
-export default { en, ru };
+export default { ru };

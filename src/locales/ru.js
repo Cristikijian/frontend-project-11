@@ -1,6 +1,10 @@
 export default {
   translation: {
     lng: 'Русский',
-    notUrl: 'Ссылка должна быть валидным URL',s
+    successLoad: 'RSS успешно загружен',
+    errors: {
+      notUrl: 'Ссылка должна быть валидным URL',
+      urlExist: 'RSS уже существует',
+    }, 
   },
 };
