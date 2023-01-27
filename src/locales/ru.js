@@ -5,6 +5,9 @@ export default {
     errors: {
       notUrl: 'Ссылка должна быть валидным URL',
       urlExist: 'RSS уже существует',
+      responseErr: 'Невозможно осуществить запрос',
+      networkError: 'Ошибка сети',
+      emptyField: 'поле не должно быть пустым',
     }, 
   },
 };
