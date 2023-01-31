@@ -1,158 +1,183 @@
 // Import our custom CSS
-import '../scss/styles.scss'
+import '../scss/styles.scss';
 
 // Import all of Bootstrap's JS
 import { Button } from 'bootstrap';
-import uniqueId from 'lodash/uniqueId.js';
+import uniqueId from 'lodash/uniqueId';
 import onChange from 'on-change';
-import *as yup from 'yup';
-import { object, string, setLocale } from 'yup';
+import * as yup from 'yup';
+import { setLocale } from 'yup';
 import i18n from 'i18next';
-import resources from '../locales/index.js';
+import resources from '../locales/index';
 import render from './view';
-import axios from 'axios';
 import parser from './parser';
+import getFeed from './getFeed';
 
+const app = async () => {
+  const defaultLanguage = 'ru';
 
-const app = async() => {
-    const defaultLanguage = 'ru';
+  const i18nInstance = i18n.createInstance();
+  await i18nInstance.init({
+    lng: defaultLanguage,
+    debug: false,
+    resources,
+  });
 
-    const i18nInstance = i18n.createInstance();
-    await i18nInstance.init({
-        lng: defaultLanguage,
-        debug: false,
-        resources,
-    });
+  const state = {
+    isValid: false,
 
-    const state = {
-        formProcess: {
-            state: 'filling',
-            error: null,
-        },
-        loadingProcess: {
-            state: 'initial',
-            error: null,
-        },
-        existedUrls: [],
-        feeds: [],
-    };
+    form:
+      'filling',
 
+    loadingProcess: {
+      state: 'initial',
+      error: null,
+    },
+    existedUrls: [],
+    feeds: [],
+  };
 
-    setLocale({
-        mixed: {
-          notOneOf: 'errors.urlExist',
-          
-        },
-        string: {
-            url: 'errors.notUrl',
-        }
-    });
+  setLocale({
+    mixed: {
+      notOneOf: 'errors.urlExist',
 
-    const validate = (field) => {
-        return yup.string().trim().required().url().notOneOf(state.existedUrls).validate(field);
-    };
-    
-    const elements = {
-        formEl: document.querySelector('form'),
-        postsContainer: document.querySelector('.container-xxl'),
-        input: document.getElementById('url-input'),
-        feedback: document.querySelector('.feedback'),
-        feedsContainer: document.querySelector('.feeds'),
-        postsContainer: document.querySelector('.posts'),
-        feedsCard: document.createElement('div'),
-        cardBody: document.createElement('div'),
-        cardTitle: document.createElement('h2'),
-        listGroup: document.createElement('ul'),
-    };
+    },
+    string: {
+      url: 'errors.notUrl',
+    },
+  });
 
-    elements.feedsCard.append(elements.cardBody);
-    elements.feedsCard.classList.add('card', 'border-0');
-    elements.cardBody.append(elements.cardTitle);
-    elements.cardBody.classList.add('card-body');
-    elements.feedsContainer.append(elements.feedsCard);
-    elements.feedsCard.append(elements.listGroup);
-    elements.cardTitle.classList.add('card-title', 'h4');
-    elements.listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+  const validate = (field) => yup.string().trim().required().url()
+    .notOneOf(state.existedUrls)
+    .validate(field);
 
-    const watchedState = onChange(state, (path, value) => {
-        render({
-            path, value, state, i18: i18nInstance, elements
-        })
-    });
+  const elements = {
+    formEl: document.querySelector('form'),
+    input: document.getElementById('url-input'),
+    feedback: document.querySelector('.feedback'),
+    feedsContainer: document.querySelector('.feeds'),
+    postsContainer: document.querySelector('.posts'),
+    feedsCard: document.createElement('div'),
+    feedsCardBody: document.createElement('div'),
+    feedsCardTitle: document.createElement('h2'),
+    feedsListGroup: document.createElement('ul'),
+    postsCard: document.createElement('div'),
+    postsCardBody: document.createElement('div'),
+    postsCardTitle: document.createElement('h2'),
+    postsListGroup: document.createElement('ul'),
 
-    elements.formEl.addEventListener('submit', (e) => {
-        e.preventDefault();
-        i18nInstance.t('notUrl');
-        console.log(elements.formEl);
-        const formData = new FormData(e.target);
-        const url = formData.get('url');
-        
-        
-        validate(url).then((validUrl) => {
-            elements.input.classList.remove('is-invalid');
-            elements.input.classList.add('is-valid');
-            elements.feedback.classList.remove('text-danger');
-            elements.feedback.classList.add('text-success');
-            state.existedUrls.push(validUrl);
-            elements.feedback.textContent = i18nInstance.t('successLoad');
-            elements.input.value = '';
-            elements.input.focus();
-            return validUrl;
-        })
-        .catch((err) =>{
-            elements.input.classList.add('is-invalid');
-            elements.feedback.classList.add('text-danger');
-            elements.feedback.textContent = err.errors.map((errorKey) => i18nInstance.t(errorKey)).join("\n");
-            console.log(state.existedUrls);
-        })
-        .then((validUrl) => {
-            return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(validUrl)}`)
-        })
-        .then(response => {
-            return response.data.contents;
+  };
+
+  elements.feedsCard.append(elements.feedsCardBody);
+  elements.feedsCard.classList.add('card', 'border-0');
+  elements.feedsCardBody.append(elements.feedsCardTitle);
+  elements.feedsCardBody.classList.add('card-body');
+  elements.feedsContainer.append(elements.feedsCard);
+  elements.feedsCard.append(elements.feedsListGroup);
+  elements.feedsCardTitle.classList.add('card-title', 'h4');
+  elements.feedsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+  elements.postsCard.append(elements.postsCardBody);
+  elements.postsCard.classList.add('card', 'border-0');
+  elements.postsCardBody.append(elements.postsCardTitle);
+  elements.postsCardBody.classList.add('card-body');
+  elements.postsContainer.append(elements.postsCard);
+  elements.postsCard.append(elements.postsListGroup);
+  elements.postsCardTitle.classList.add('card-title', 'h4');
+  elements.postsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+  const watchedState = onChange(state, (path, value) => {
+    switch (path) {
+      case 'existedUrls': {
+        const currentFeed = value[value.length - 1];
+        getFeed(currentFeed)
+          .then((response) => {
+            watchedState.loadingProcess.state = 'success';
+            watchedState.form = 'success';
+            watchedState.loadingProcess.data = response.data.contents;
           })
-        .then(parser)
-        .then((parsedResult) => {
+          .catch((err) => {
+            console.log(err);
+            if (err.response) {
+              watchedState.loadingProcess.state = 'failed';
+              watchedState.form = 'failed';
+              watchedState.loadingProcess.error = 'error';
+              elements.feedback.textContent = i18nInstance.t('errors.responceErr');
+            }
+            if (err.request) {
+              watchedState.loadingProcess.state = 'failed';
+              watchedState.form = 'failed';
+              watchedState.loadingProcess.error = 'error';
+              elements.feedback.textContent = i18nInstance.t('errors.networkError');
+            } else {
+              elements.feedback.textContent = err.errors.map((errorKey) => i18nInstance.t(errorKey)).join('\n');
+            }
+            // вынести во вью
+          });
+        break;
+      }
+
+      case 'loadingProcess.data': {
+        parser(value)
+          .then((parsedResult) => {
             const doc = parsedResult.documentElement;
-            const feedTitle = doc.querySelector('channel title');
-            const feedDescription = doc.querySelector('channel description');
             const posts = doc.querySelectorAll('item');
 
-            console.log(doc, feedTitle, posts);
-
             watchedState.feeds.push({
-                id: uniqueId('feed'),
-                title: feedTitle.textContent,
-                description: feedDescription.textContent,
-                posts: [...posts].map((post) => {
-                    return {
-                        id: uniqueId('post'),
-                        title: post.querySelector('title').textContent,
-                        link: post.querySelector('link').textContent,
-                    }
-                })
+              id: uniqueId('feed'),
+              title: doc.querySelector('channel title').textContent,
+              description: doc.querySelector('channel description').textContent,
+              posts: [...posts].map((post) => ({
+                id: uniqueId('post'),
+                title: post.querySelector('title').textContent,
+                link: post.querySelector('link').textContent,
+              })),
             });
-            console.log(state.feeds);
-        })
-        .catch((err) => {
+          })
+          .catch((err) => {
             console.log(err);
-            if(err.request) {
-                elements.input.classList.add('is-invalid');
-                elements.feedback.classList.add('text-danger');
-                elements.feedback.textContent = i18nInstance.t('errors.networkError');
-            }
-        })
+          })
+          .then(() => {
+            watchedState.existedUrls.forEach((url) => {
+              setTimeout(() => getFeed(url), 5000);
+            });
+          });
+        break;
+      }
+      default:
+        break;
+    }
 
+    render({
+      path, value, state, i18: i18nInstance, elements,
+    });
+  });
+
+  const validation = (url) => validate(url)
+    .then((validUrl) => {
+      watchedState.existedUrls.push(validUrl);
+      watchedState.form = 'success';
+      watchedState.isValid = true;
+    })
+    .catch((err) => {
+      watchedState.form = 'failed';
+      watchedState.isValid = false;
+      elements.feedback.textContent = err.errors.map((errorKey) => i18nInstance.t(errorKey)).join('\n');
     });
 
-    elements.postsContainer.addEventListener('click', (e) => {
+  elements.formEl.addEventListener('submit', (e) => {
+    e.preventDefault();
+    i18nInstance.t('notUrl');
+    const formData = new FormData(e.target);
+    const url = formData.get('url');
 
-    });
+    validation(url);
+  });
 
-    // const watchedState = onChange(state, (path, value, previousValue) => {
-    //     render(watchedState, elements, i18nInstance);
-    //   });
-}
+  elements.postsContainer.addEventListener('click', (e) => {
+
+  });
+};
 
 app();
 

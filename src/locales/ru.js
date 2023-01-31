@@ -7,7 +7,10 @@ export default {
       urlExist: 'RSS уже существует',
       responseErr: 'Невозможно осуществить запрос',
       networkError: 'Ошибка сети',
-      emptyField: 'поле не должно быть пустым',
-    }, 
+      emptyField: 'Поле не должно быть пустым',
+    },
+    btn: 'Посмотреть',
+    feeds: 'Фиды',
+    posts: 'Посты',
   },
 };

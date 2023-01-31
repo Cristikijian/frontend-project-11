@@ -1,31 +1,6 @@
 ---
-
-# https://eslint.org/docs/user-guide/configuring#specifying-environments
 env:
-  node: true
-  jest/globals: true
-
+  browser: true
+  
 extends:
   - 'airbnb-base'
-
-parserOptions:
-  ecmaVersion: latest
-
-plugins:
-  - jest
-
-rules:
-  no-console: 0
-  import/extensions: # FIXME: remove when rule will be adjusted for new nodejs version
-    - error
-    - ignorePackages
-    - js: always
-  no-underscore-dangle: [2, { "allow": ["__filename", "__dirname"] }]
-Footer
-© 2022 GitHub, Inc.
-Footer navigation
-Terms
-Privacy
-Security
-Status
-Docs
