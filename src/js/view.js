@@ -1,4 +1,6 @@
-const renderFeed = (elements, feed, i18) => {
+import elements from './domElements';
+
+const renderFeed = (feed, i18) => {
   elements.feedsListGroup.innerHTML = `
       <li class="list-group-item border-0 border-end-0">
         <h3 class="h6 m-0">${feed.title}</h3>
@@ -9,8 +11,9 @@ const renderFeed = (elements, feed, i18) => {
   elements.feedsCardTitle.textContent = i18.t('feeds');
 };
 
-const renderPosts = (elements, feed, i18) => {
-  feed.posts.forEach((post) => {
+const renderPosts = (posts, i18) => {
+  console.log(posts);
+  const items = posts.map((post) => {
     const postList = document.createElement('li');
     const btn = document.createElement('button');
     const postLink = document.createElement('a');
@@ -23,21 +26,38 @@ const renderPosts = (elements, feed, i18) => {
     postLink.classList.add('fw-bold');
     postLink.rel = 'noopener noreferrer';
     postLink.target = '_blank';
-    elements.postsListGroup.prepend(postList);
-
+    postLink.id = post.id;
     postLink.href = post.link;
-    // postLink('[data-id=post.id]');
-    // btn('[data-id=post.id]');
-    postList.append(postLink, btn);
+
+    btn.dataset.linkId = post.id;
+    btn.dataset.bsTarget = '#modal';
+    btn.dataset.bsToggle = 'modal';
+
+    postList.prepend(postLink, btn);
     postLink.innerHTML = post.title;
-    elements.postsListGroup.append(postList);
-    console.log(post.title, post.id, post.link);
+
+    btn.addEventListener('click', () => {
+      document.querySelector('.modal-title').textContent = post.title;
+      document.querySelector('.modal-body').textContent = post.description;
+      const modalBtn = document.querySelector('.full-article');
+      modalBtn.href = post.link;
+      modalBtn.dataset.linkId = post.id;
+    });
+
+    postLink.addEventListener('click', () => {
+      postLink.classList.remove();
+      postLink.classList.add('fw-normal', 'link-secondary');
+    });
+    return postList;
   });
-  elements.postsCardTitle.textContent = i18.t('feeds');
+
+  elements.postsListGroup.replaceChildren(...items);
+  elements.postsCardTitle.textContent = i18.t('posts');
 };
 
-const renderForm = (elements, state, i18) => {
+const renderForm = (state, i18) => {
   console.log(state.form);
+  console.log(`${state.posts}посты`);
   switch (state.form) {
     case 'success': {
       elements.input.classList.remove('is-invalid');
@@ -47,6 +67,7 @@ const renderForm = (elements, state, i18) => {
       elements.feedback.textContent = i18.t('successLoad');
       elements.input.value = '';
       elements.input.focus();
+
       break;
     }
 
@@ -60,23 +81,43 @@ const renderForm = (elements, state, i18) => {
   }
 };
 
+const readPostsId = (posts, value) => {
+  const result = posts.map((post) => {
+    if (value.includes(post.id)) {
+      const currentLink = document.querySelector('a#');
+      currentLink.classList.remove();
+      currentLink.classList.add('fw-normal', 'link-secondary');
+    }
+    return result;
+  });
+};
+
 const render = ({
-  path, value, state, i18, elements,
+  path, value, state, i18,
 }) => {
   // console.log(path, value);
 
   switch (path) {
     case 'exictedUrls':
+      document.querySelector('button').disabled = true;
       return;
     case 'feeds': {
       const currentFeed = value[value.length - 1];
-      renderFeed(elements, currentFeed, i18);
-      renderPosts(elements, currentFeed, i18);
+      renderFeed(currentFeed, i18);
+      break;
+    }
+    case 'posts': {
+      renderPosts(value, i18);
       break;
     }
 
     case 'form': {
-      renderForm(elements, state, i18);
+      renderForm(state, i18);
+      break;
+    }
+
+    case 'uiState': {
+      // readPostsId(state.posts, value);
       break;
     }
 
@@ -84,9 +125,3 @@ const render = ({
   }
 };
 export default render;
-
-// feedsCaption: '<div class="card-body"><h2 class="card-title h4">Фиды</h2></div>',
-
-// container.innerHTML = '';
-//   const buttons = state.posts.map(()=> {});
-//   container.append(...buttons);
