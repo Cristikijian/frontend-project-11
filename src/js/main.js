@@ -88,14 +88,13 @@ const app = async () => {
     setTimeout(() => getFeed(url)
       .then((response) => parser(response.data.contents))
       .then((data) => {
-        console.log(`${data}timeout`);
         const newPosts = data.querySelectorAll('item');
         watchedState.posts = uniqBy([...watchedState.posts, ...createPosts(newPosts)], 'link');
         updatePosts(url);
       })
       .catch((err) => {
-        console.log(err);
         elements.feedback.textContent = i18nInstance.t('errors.parserError');
+        return Promise.reject(err);
       }), 5000);
   };
 
