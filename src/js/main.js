@@ -127,6 +127,10 @@ const app = async () => {
         return Promise.reject();
       })
       .then(parser)
+      .catch((err) => {
+        elements.feedback.textContent = i18nInstance.t('errors.parserError');
+        return Promise.reject(err);
+      })
       .then((doc) => {
         const posts = doc.querySelectorAll('item');
         watchedState.feeds.push(createFeed(doc, url));
