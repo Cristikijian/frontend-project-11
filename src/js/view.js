@@ -12,7 +12,6 @@ const renderFeed = (feed, i18) => {
 };
 
 const renderPosts = (posts, i18) => {
-  console.log(posts);
   const items = posts.map((post) => {
     const postList = document.createElement('li');
     const btn = document.createElement('button');
@@ -56,8 +55,6 @@ const renderPosts = (posts, i18) => {
 };
 
 const renderForm = (state, i18) => {
-  console.log(state.form);
-  console.log(`${state.posts}посты`);
   switch (state.form) {
     case 'success': {
       elements.input.classList.remove('is-invalid');
@@ -81,22 +78,9 @@ const renderForm = (state, i18) => {
   }
 };
 
-const readPostsId = (posts, value) => {
-  const result = posts.map((post) => {
-    if (value.includes(post.id)) {
-      const currentLink = document.querySelector('a#');
-      currentLink.classList.remove();
-      currentLink.classList.add('fw-normal', 'link-secondary');
-    }
-    return result;
-  });
-};
-
 const render = ({
   path, value, state, i18,
 }) => {
-  // console.log(path, value);
-
   switch (path) {
     case 'exictedUrls':
       document.querySelector('button').disabled = true;
@@ -113,11 +97,6 @@ const render = ({
 
     case 'form': {
       renderForm(state, i18);
-      break;
-    }
-
-    case 'uiState': {
-      // readPostsId(state.posts, value);
       break;
     }
 
