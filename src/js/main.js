@@ -53,15 +53,15 @@ const app = async () => {
     },
   });
 
-  const validate = (field) => yup.string().trim().required().url()
-    .notOneOf(state.existedUrls)
-    .validate(field);
-
   const watchedState = onChange(state, (path, value) => {
     render({
       path, value, state, i18: i18nInstance,
     });
   });
+
+  const validate = (field) => yup.string().trim().required().url()
+    .notOneOf(watchedState.existedUrls)
+    .validate(field);
 
   document.querySelector('.full-article').addEventListener('click', (e) => {
     const { linkId } = e.target.dataset;
@@ -78,6 +78,7 @@ const app = async () => {
       return validUrl;
     })
     .catch((err) => {
+      console.log(err.errors);
       watchedState.form = 'failed';
       watchedState.isValid = false;
       elements.feedback.textContent = err.errors.map((errorKey) => i18nInstance.t(errorKey)).join('\n');
@@ -92,10 +93,10 @@ const app = async () => {
         watchedState.posts = uniqBy([...watchedState.posts, ...createPosts(newPosts)], 'link');
         updatePosts(url);
       })
-      .catch((err) => {
-        elements.feedback.textContent = i18nInstance.t('errors.parserError');
-        return Promise.reject(err);
-      }), 5000);
+      // .catch((err) => {
+      //   elements.feedback.textContent = i18nInstance.t('errors.parserError');
+      //   return Promise.reject(err);
+      // }), 5000);
   };
 
   elements.formEl.addEventListener('submit', (e) => {
@@ -118,7 +119,7 @@ const app = async () => {
         watchedState.loadingProcess.error = 'error';
         let errorName = '';
         if (err.response) {
-          errorName = 'errors.responceErr';
+          errorName = 'errors.responseErr';
         } else if (err.request) {
           errorName = 'networkError';
         }
