@@ -92,11 +92,7 @@ const app = async () => {
         const newPosts = data.querySelectorAll('item');
         watchedState.posts = uniqBy([...watchedState.posts, ...createPosts(newPosts)], 'link');
         updatePosts(url);
-      })
-      // .catch((err) => {
-      //   elements.feedback.textContent = i18nInstance.t('errors.parserError');
-      //   return Promise.reject(err);
-      // }), 5000);
+      }), 5000);
   };
 
   elements.formEl.addEventListener('submit', (e) => {
