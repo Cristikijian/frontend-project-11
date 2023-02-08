@@ -123,9 +123,9 @@ const app = async () => {
         return Promise.reject();
       })
       .then(parser)
-      .catch((err) => {
+      .catch(() => {
         elements.feedback.textContent = i18nInstance.t('errors.parserError');
-        return Promise.reject(err);
+        return Promise.reject();
       })
       .then((doc) => {
         const posts = doc.querySelectorAll('item');
