@@ -1,13 +1,11 @@
 import elements from './domElements';
 
-const renderFeed = (feed, i18) => {
-  elements.feedsListGroup.innerHTML = `
-      <li class="list-group-item border-0 border-end-0">
-        <h3 class="h6 m-0">${feed.title}</h3>
-        <p class="m-0 small text-black-50">${feed.description}</p>
-      </li>
-      ${elements.feedsListGroup.innerHTML}`;
-
+const renderFeeds = (feeds, i18) => {
+  elements.feedsListGroup.innerHTML = feeds.reduce((result, feed) => `
+  <li class="list-group-item border-0 border-end-0">
+    <h3 class="h6 m-0">${feed.title}</h3>
+    <p class="m-0 small text-black-50">${feed.description}</p>
+  </li>`, '');
   elements.feedsCardTitle.textContent = i18.t('feeds');
 };
 
@@ -82,19 +80,14 @@ const render = ({
   path, value, state, i18,
 }) => {
   switch (path) {
-    case 'exictedUrls':
-      document.querySelector('button').disabled = true;
-      return;
     case 'feeds': {
-      const currentFeed = value[value.length - 1];
-      renderFeed(currentFeed, i18);
+      renderFeeds(value, i18);
       break;
     }
     case 'posts': {
       renderPosts(value, i18);
       break;
     }
-
     case 'form': {
       renderForm(state, i18);
       break;
