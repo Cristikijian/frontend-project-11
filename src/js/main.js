@@ -72,9 +72,9 @@ const app = async () => {
       })
       .then((doc) => {
         const posts = doc.querySelectorAll('item');
-
         watchedState.feeds = uniqBy([...watchedState.feeds, createFeed(doc, url)], 'link');
         watchedState.posts = uniqBy([...watchedState.posts, ...createPosts(posts)], 'link');
+
         if (successCb) {
           successCb();
         }

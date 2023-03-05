@@ -1,11 +1,16 @@
 import elements from './domElements';
 
 const renderFeeds = (feeds, i18) => {
-  elements.feedsListGroup.innerHTML = feeds.reduce((result, feed) => `
-  <li class="list-group-item border-0 border-end-0">
-    <h3 class="h6 m-0">${feed.title}</h3>
-    <p class="m-0 small text-black-50">${feed.description}</p>
-  </li>`, '');
+  elements.feedsListGroup.innerHTML = feeds.reduce((result, feed) => {
+    // eslint-disable-next-line no-param-reassign
+    result += `
+      <li class="list-group-item border-0 border-end-0">
+        <h3 class="h6 m-0">${feed.title}</h3>
+        <p class="m-0 small text-black-50">${feed.description}</p>
+      </li>
+    `;
+    return result;
+  }, '');
   elements.feedsCardTitle.textContent = i18.t('feeds');
 };
 
