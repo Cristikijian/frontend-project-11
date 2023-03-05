@@ -41,6 +41,7 @@ const renderPosts = (posts, i18) => {
     btn.addEventListener('click', () => {
       document.querySelector('.modal-title').textContent = post.title;
       document.querySelector('.modal-body').textContent = post.description;
+      postLink.classList.remove('fw-bold');
       const modalBtn = document.querySelector('.full-article');
       modalBtn.href = post.link;
       modalBtn.dataset.linkId = post.id;
