@@ -47,7 +47,7 @@ const renderPosts = (posts, i18) => {
     });
 
     postLink.addEventListener('click', () => {
-      postLink.classList.remove();
+      postLink.classList.remove('fw-bold');
       postLink.classList.add('fw-normal', 'link-secondary');
     });
     return postList;
