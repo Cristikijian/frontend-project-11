@@ -7,7 +7,7 @@ const getFeed = (url) => axios.get(`https://allorigins.hexlet.app/get?disableCac
     if (err.response) {
       error = 'errors.responseErr';
     } else if (err.request) {
-      error = 'networkError';
+      error = 'errors.networkError';
     }
     return { error };
   });
