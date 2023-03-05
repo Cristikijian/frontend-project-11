@@ -10,7 +10,7 @@ export default {
       networkError: 'Ошибка сети',
       emptyField: 'Поле не должно быть пустым',
     },
-    btn: 'Посмотреть',
+    btn: 'Просмотр',
     feeds: 'Фиды',
     posts: 'Посты',
   },
