@@ -1,8 +1,6 @@
 // Import our custom CSS
 import '../scss/styles.scss';
-
-// eslint-disable-next-line no-unused-vars
-import { Modal } from 'bootstrap';
+import 'bootstrap/js/src/modal';
 
 import onChange from 'on-change';
 import * as yup from 'yup';
@@ -13,25 +11,29 @@ import resources from '../locales/index';
 import render from './view';
 import parser from './parser';
 import getFeed from './getFeed';
-import createFeed from './createFeed';
-import createPosts from './createPosts';
 import elements from './domElements';
 
-const app = async () => {
+const init = () => {
   const defaultLanguage = 'ru';
 
   const i18nInstance = i18n.createInstance();
-  await i18nInstance.init({
+  return i18nInstance.init({
     lng: defaultLanguage,
     debug: false,
     resources,
   });
+};
 
+const app = (i18) => {
   const state = {
-    form: 'filling',
+    form: {
+      state: 'filling',
+      error: null,
+    },
     existedUrls: [],
     feeds: [],
     posts: [],
+    uiState: [],
   };
 
   setLocale({
@@ -46,7 +48,7 @@ const app = async () => {
 
   const watchedState = onChange(state, (path, value) => {
     render({
-      path, value, state, i18: i18nInstance,
+      path, value, state, i18,
     });
   });
 
@@ -59,6 +61,7 @@ const app = async () => {
     const link = document.getElementById(linkId);
     link.classList.remove();
     link.classList.add('fw-normal', 'link-secondary');
+    watchedState.uiState.push(linkId);
   });
 
   const updatePosts = (url, successCb, errorCb) => {
@@ -68,49 +71,50 @@ const app = async () => {
           throw new Error(result.error);
         }
 
-        return parser(result.data);
+        return parser(result.data, url);
       })
-      .then((doc) => {
-        const posts = doc.querySelectorAll('item');
-        watchedState.feeds = uniqBy([...watchedState.feeds, createFeed(doc, url)], 'link');
-        watchedState.posts = uniqBy([...watchedState.posts, ...createPosts(posts)], 'link');
+      .then((data) => {
+        watchedState.feeds = uniqBy([...watchedState.feeds, data.feed], 'link');
+        watchedState.posts = uniqBy([...watchedState.posts, ...data.posts], 'link');
 
         if (successCb) {
           successCb();
         }
-
-        setTimeout(() => updatePosts(url), 5000);
       })
       .catch((err) => {
         if (errorCb) errorCb(err);
-      });
+      })
+      .finally(() => setTimeout(() => updatePosts(url), 5000));
   };
 
   elements.formEl.addEventListener('submit', (e) => {
     e.preventDefault();
-    i18nInstance.t('notUrl');
+    watchedState.form.error = null;
+    i18('notUrl');
     const formData = new FormData(e.target);
     const url = formData.get('url');
 
     validate(url)
       .then((validUrl) => {
-        watchedState.existedUrls.push(validUrl);
         updatePosts(
           validUrl,
-          () => { watchedState.form = 'success'; },
+          () => {
+            watchedState.form.state = 'success';
+            watchedState.existedUrls.push(validUrl);
+          },
           (err) => {
-            watchedState.form = 'failed';
-            elements.feedback.textContent = i18nInstance.t(err.message);
+            watchedState.form.state = 'failed';
+            watchedState.form.error = i18(err.message);
           },
         );
       })
       .catch((err) => {
-        watchedState.form = 'failed';
-        elements.feedback.textContent = err.errors.map((errorKey) => i18nInstance.t(errorKey)).join('\n');
+        watchedState.form.state = 'failed';
+        watchedState.form.error = err.errors.map((errorKey) => i18(errorKey)).join('\n');
       });
   });
 };
 
-app();
+init().then((i18) => app(i18));
 
 export default app;
