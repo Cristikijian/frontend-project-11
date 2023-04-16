@@ -37,6 +37,7 @@ const renderPosts = (posts, i18, state, elements) => {
 
     if (state.uiState.clickedLinksIds.includes(post.id)) {
       postLink.classList.add('fw-normal', 'link-secondary');
+      postLink.classList.remove('fw-bold');
     } else {
       postLink.classList.add('fw-bold');
       postLink.rel = 'noopener noreferrer';
