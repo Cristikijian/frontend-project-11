@@ -1,6 +1,6 @@
-import elements from './domElements';
+/* eslint-disable no-param-reassign */
 
-const renderFeeds = (feeds, i18) => {
+const renderFeeds = (feeds, i18, elements) => {
   elements.feedsListGroup.innerHTML = feeds.reduce((result, feed) => {
     // eslint-disable-next-line no-param-reassign
     result += `
@@ -14,29 +14,28 @@ const renderFeeds = (feeds, i18) => {
   elements.feedsCardTitle.textContent = i18('feeds');
 };
 
-const renderPosts = (posts, i18, state) => {
+const renderPosts = (posts, i18, state, elements) => {
   const items = posts.map((post) => {
-    const postList = document.createElement('li');
+    const postListElement = document.createElement('li');
     const btn = document.createElement('button');
     const postLink = document.createElement('a');
 
-    postList.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+    postListElement.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     btn.innerHTML = i18('btn');
     btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     btn.type = 'button';
 
     postLink.id = post.id;
     postLink.href = post.link;
-
     document.querySelector('.full-article').addEventListener('click', (e) => {
       const { linkId } = e.target.dataset;
       const link = document.getElementById(linkId);
       link.classList.remove('fw-bold');
       link.classList.add('fw-normal', 'link-secondary');
-      state.uiState.push(linkId);
+      state.uiState.clickedLinksIds.push(linkId);
     });
 
-    if (state.uiState.includes(post.id)) {
+    if (state.uiState.clickedLinksIds.includes(post.id)) {
       postLink.classList.add('fw-normal', 'link-secondary');
     } else {
       postLink.classList.add('fw-bold');
@@ -48,14 +47,12 @@ const renderPosts = (posts, i18, state) => {
     btn.dataset.bsTarget = '#modal';
     btn.dataset.bsToggle = 'modal';
 
-    postList.prepend(postLink, btn);
+    postListElement.prepend(postLink, btn);
     postLink.innerHTML = post.title;
 
     btn.addEventListener('click', () => {
       document.querySelector('.modal-title').textContent = post.title;
       document.querySelector('.modal-body').textContent = post.description;
-      postLink.classList.remove('fw-bold');
-      postLink.classList.add('fw-normal', 'link-secondary');
       const modalBtn = document.querySelector('.full-article');
       modalBtn.href = post.link;
       modalBtn.dataset.linkId = post.id;
@@ -64,16 +61,16 @@ const renderPosts = (posts, i18, state) => {
     postLink.addEventListener('click', () => {
       postLink.classList.remove('fw-bold');
       postLink.classList.add('fw-normal', 'link-secondary');
-      state.uiState.push(postLink.id);
+      state.uiState.clickedLinksIds.push(postLink.id);
     });
-    return postList;
+    return postListElement;
   });
 
   elements.postsListGroup.replaceChildren(...items);
   elements.postsCardTitle.textContent = i18('posts');
 };
 
-const renderForm = (state, i18) => {
+const renderForm = (state, i18, elements) => {
   switch (state.form.state) {
     case 'success': {
       elements.input.classList.remove('is-invalid');
@@ -83,7 +80,6 @@ const renderForm = (state, i18) => {
       elements.feedback.textContent = i18('successLoad');
       elements.input.value = '';
       elements.input.focus();
-
       break;
     }
 
@@ -93,24 +89,38 @@ const renderForm = (state, i18) => {
       break;
     }
 
+    case 'filling': {
+      elements.input.classList.remove('is-invalid');
+      break;
+    }
+
     default:
   }
 };
 
 const render = ({
-  path, value, state, i18,
+  path, value, state, i18, elements,
 }) => {
   switch (path) {
     case 'feeds': {
-      renderFeeds(value, i18);
+      renderFeeds(value, i18, elements);
       break;
     }
     case 'posts': {
-      renderPosts(value, i18, state);
+      renderPosts(value, i18, state, elements);
       break;
     }
-    case 'form': {
-      renderForm(state, i18);
+    case 'form.state': {
+      renderForm(state, i18, elements);
+      break;
+    }
+    case 'form.error': {
+      elements.feedback.textContent = state.form.error;
+      break;
+    }
+    case 'isLoading': {
+      elements.input.disabled = state.isLoading;
+      elements.addBtn.disabled = state.isLoading;
       break;
     }
 

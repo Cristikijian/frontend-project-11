@@ -11,7 +11,6 @@ import resources from '../locales/index';
 import render from './view';
 import parser from './parser';
 import getFeed from './getFeed';
-import elements from './domElements';
 
 const init = () => {
   const defaultLanguage = 'ru';
@@ -25,7 +24,44 @@ const init = () => {
 };
 
 const app = (i18) => {
+  const elements = {
+    formEl: document.querySelector('form'),
+    addBtn: document.querySelector('form button'),
+    input: document.getElementById('url-input'),
+    feedback: document.querySelector('.feedback'),
+    feedsContainer: document.querySelector('.feeds'),
+    postsContainer: document.querySelector('.posts'),
+    feedsCard: document.createElement('div'),
+    feedsCardBody: document.createElement('div'),
+    feedsCardTitle: document.createElement('h2'),
+    feedsListGroup: document.createElement('ul'),
+    postsCard: document.createElement('div'),
+    postsCardBody: document.createElement('div'),
+    postsCardTitle: document.createElement('h2'),
+    postsListGroup: document.createElement('ul'),
+    modal: document.getElementById('modal'),
+  };
+
+  elements.feedsCard.append(elements.feedsCardBody);
+  elements.feedsCard.classList.add('card', 'border-0');
+  elements.feedsCardBody.append(elements.feedsCardTitle);
+  elements.feedsCardBody.classList.add('card-body');
+  elements.feedsContainer.append(elements.feedsCard);
+  elements.feedsCard.append(elements.feedsListGroup);
+  elements.feedsCardTitle.classList.add('card-title', 'h4');
+  elements.feedsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+  elements.postsCard.append(elements.postsCardBody);
+  elements.postsCard.classList.add('card', 'border-0');
+  elements.postsCardBody.append(elements.postsCardTitle);
+  elements.postsCardBody.classList.add('card-body');
+  elements.postsContainer.append(elements.postsCard);
+  elements.postsCard.append(elements.postsListGroup);
+  elements.postsCardTitle.classList.add('card-title', 'h4');
+  elements.postsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
   const state = {
+    isLoading: false,
     form: {
       state: 'filling',
       error: null,
@@ -33,7 +69,15 @@ const app = (i18) => {
     existedUrls: [],
     feeds: [],
     posts: [],
-    uiState: [],
+    uiState: {
+      clickedLinksIds: [],
+      modal: {
+        title: '',
+        body: '',
+        link: '',
+        id: '',
+      },
+    },
   };
 
   setLocale({
@@ -48,21 +92,36 @@ const app = (i18) => {
 
   const watchedState = onChange(state, (path, value) => {
     render({
-      path, value, state, i18,
+      path, value, state, i18, elements,
     });
+  });
+
+  elements.input.addEventListener('input', () => {
+    if (watchedState.form.error) {
+      watchedState.form.error = null;
+      watchedState.form.state = 'filling';
+    }
+  });
+
+  elements.modal.addEventListener('click', (e) => {
+    watchedState.uiState.clickedLinksIds.push(e.target.id);
+  });
+
+  elements.postsListGroup.addEventListener('click', (e) => {
+    if (e.target.tagName === 'button') {
+      watchedState.uiState.modal.body = e.target.description;
+      watchedState.uiState.modal.title = e.target.title;
+      watchedState.uiState.modal.link = e.target.link;
+      watchedState.uiState.modal.id = e.target.id;
+    }
+    if (e.target.tagName === 'a') {
+      watchedState.uiState.clickedLinksIds.push(e.target.id);
+    }
   });
 
   const validate = (field) => yup.string().trim().required().url()
     .notOneOf(watchedState.existedUrls)
     .validate(field);
-
-  document.querySelector('.full-article').addEventListener('click', (e) => {
-    const { linkId } = e.target.dataset;
-    const link = document.getElementById(linkId);
-    link.classList.remove();
-    link.classList.add('fw-normal', 'link-secondary');
-    watchedState.uiState.push(linkId);
-  });
 
   const updatePosts = (url, successCb, errorCb) => {
     getFeed(url)
@@ -82,27 +141,33 @@ const app = (i18) => {
         }
       })
       .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(err);
         if (errorCb) errorCb(err);
       })
-      .finally(() => setTimeout(() => updatePosts(url), 5000));
+      .finally(() => {
+        setTimeout(() => updatePosts(url), 5000);
+      });
   };
 
   elements.formEl.addEventListener('submit', (e) => {
     e.preventDefault();
     watchedState.form.error = null;
-    i18('notUrl');
     const formData = new FormData(e.target);
     const url = formData.get('url');
 
     validate(url)
       .then((validUrl) => {
+        watchedState.isLoading = true;
         updatePosts(
           validUrl,
           () => {
+            watchedState.isLoading = false;
             watchedState.form.state = 'success';
             watchedState.existedUrls.push(validUrl);
           },
           (err) => {
+            watchedState.isLoading = false;
             watchedState.form.state = 'failed';
             watchedState.form.error = i18(err.message);
           },
