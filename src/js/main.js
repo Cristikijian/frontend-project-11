@@ -5,23 +5,12 @@ import 'bootstrap/js/src/modal';
 import onChange from 'on-change';
 import * as yup from 'yup';
 import { setLocale } from 'yup';
-import i18n from 'i18next';
+
 import { uniqBy } from 'lodash';
-import resources from '../locales/index';
+
 import render from './view';
 import parser from './parser';
 import getFeed from './getFeed';
-
-const init = () => {
-  const defaultLanguage = 'ru';
-
-  const i18nInstance = i18n.createInstance();
-  return i18nInstance.init({
-    lng: defaultLanguage,
-    debug: false,
-    resources,
-  });
-};
 
 const app = (i18) => {
   const elements = {
@@ -108,13 +97,20 @@ const app = (i18) => {
   });
 
   elements.postsListGroup.addEventListener('click', (e) => {
-    if (e.target.tagName === 'button') {
-      watchedState.uiState.modal.body = e.target.description;
-      watchedState.uiState.modal.title = e.target.title;
-      watchedState.uiState.modal.link = e.target.link;
-      watchedState.uiState.modal.id = e.target.id;
+    if (e.target.tagName === 'BUTTON') {
+      const { postId } = e.target.dataset;
+
+      const post = watchedState.posts.find(({ id }) => id === postId);
+
+      watchedState.uiState.modal = {
+        body: post.description,
+        title: post.title,
+        link: post.link,
+        id: post.id,
+      };
+      watchedState.uiState.clickedLinksIds.push(postId);
     }
-    if (e.target.tagName === 'a') {
+    if (e.target.tagName === 'A') {
       watchedState.uiState.clickedLinksIds.push(e.target.id);
     }
   });
@@ -179,7 +175,5 @@ const app = (i18) => {
       });
   });
 };
-
-init().then((i18) => app(i18));
 
 export default app;

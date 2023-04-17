@@ -14,6 +14,17 @@ const renderFeeds = (feeds, i18, elements) => {
   elements.feedsCardTitle.textContent = i18('feeds');
 };
 
+const renderModal = (state) => {
+  const {
+    id, title, body, link,
+  } = state.uiState.modal;
+  document.querySelector('.modal-title').textContent = title;
+  document.querySelector('.modal-body').textContent = body;
+  const modalBtn = document.querySelector('.full-article');
+  modalBtn.href = link;
+  modalBtn.dataset.linkId = id;
+};
+
 const renderPosts = (posts, i18, state, elements) => {
   const items = posts.map((post) => {
     const postListElement = document.createElement('li');
@@ -27,45 +38,20 @@ const renderPosts = (posts, i18, state, elements) => {
 
     postLink.id = post.id;
     postLink.href = post.link;
-    document.querySelector('.full-article').addEventListener('click', (e) => {
-      const { linkId } = e.target.dataset;
-      const link = document.getElementById(linkId);
-      link.classList.remove('fw-bold');
-      link.classList.add('fw-normal', 'link-secondary');
-      state.uiState.clickedLinksIds.push(linkId);
-    });
-
-    if (state.uiState.clickedLinksIds.includes(post.id)) {
-      postLink.classList.add('fw-normal', 'link-secondary');
-      postLink.classList.remove('fw-bold');
-    } else {
-      postLink.classList.add('fw-bold');
-      postLink.rel = 'noopener noreferrer';
-      postLink.target = '_blank';
-    }
-
-    btn.dataset.linkId = post.id;
+    btn.dataset.postId = post.id;
     btn.dataset.bsTarget = '#modal';
     btn.dataset.bsToggle = 'modal';
 
     postListElement.prepend(postLink, btn);
     postLink.innerHTML = post.title;
+    postLink.rel = 'noopener noreferrer';
+    postLink.target = '_blank';
 
-    btn.addEventListener('click', () => {
-      document.querySelector('.modal-title').textContent = post.title;
-      document.querySelector('.modal-body').textContent = post.description;
-      postLink.classList.remove('fw-bold');
+    if (state.uiState.clickedLinksIds.includes(post.id)) {
       postLink.classList.add('fw-normal', 'link-secondary');
-      const modalBtn = document.querySelector('.full-article');
-      modalBtn.href = post.link;
-      modalBtn.dataset.linkId = post.id;
-    });
-
-    postLink.addEventListener('click', () => {
-      postLink.classList.remove('fw-bold');
-      postLink.classList.add('fw-normal', 'link-secondary');
-      state.uiState.clickedLinksIds.push(postLink.id);
-    });
+    } else {
+      postLink.classList.add('fw-bold');
+    }
     return postListElement;
   });
 
@@ -124,6 +110,17 @@ const render = ({
     case 'isLoading': {
       elements.input.disabled = state.isLoading;
       elements.addBtn.disabled = state.isLoading;
+      break;
+    }
+    case 'uiState.modal': {
+      renderModal(state);
+      break;
+    }
+
+    case 'uiState.clickedLinksIds': {
+      const currentLink = document.getElementById(value[value.length - 1]);
+      currentLink.classList.remove('fw-bold');
+      currentLink.classList.add('fw-normal', 'link-secondary');
       break;
     }
 
