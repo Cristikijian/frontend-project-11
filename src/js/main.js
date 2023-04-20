@@ -6,7 +6,7 @@ import onChange from 'on-change';
 import * as yup from 'yup';
 import { setLocale } from 'yup';
 
-import { uniqBy } from 'lodash';
+import { uniqBy, uniqueId } from 'lodash';
 
 import { render, initRender } from './view';
 import parser from './parser';
@@ -43,12 +43,7 @@ const app = (i18) => {
     posts: [],
     uiState: {
       clickedLinksIds: new Set(),
-      modal: {
-        title: '',
-        body: '',
-        link: '',
-        id: '',
-      },
+      selectedPostId: null,
     },
   };
 
@@ -79,14 +74,7 @@ const app = (i18) => {
     if (e.target.tagName === 'BUTTON') {
       const { postId } = e.target.dataset;
 
-      const post = watchedState.posts.find(({ id }) => id === postId);
-
-      watchedState.uiState.modal = {
-        body: post.description,
-        title: post.title,
-        link: post.link,
-        id: post.id,
-      };
+      watchedState.uiState.selectedPostId = postId;
       watchedState.uiState.clickedLinksIds.add(postId);
     }
     if (e.target.tagName === 'A') {
@@ -105,8 +93,19 @@ const app = (i18) => {
           throw new Error(result.error);
         }
 
-        return parser(result.data, url);
+        return parser(result.data);
       })
+      .then(({ feed, posts }) => ({
+        feed: {
+          ...feed,
+          id: uniqueId('feed'),
+          link: url,
+        },
+        posts: posts.map((post) => ({
+          ...post,
+          id: uniqueId('post'),
+        })),
+      }))
       .then((data) => {
         watchedState.feeds = uniqBy([...watchedState.feeds, data.feed], 'link');
         watchedState.posts = uniqBy([...watchedState.posts, ...data.posts], 'link');
@@ -148,6 +147,7 @@ const app = (i18) => {
       })
       .catch((err) => {
         watchedState.form.state = 'failed';
+        console.log(err);
         watchedState.form.error = err.errors.map((errorKey) => i18(errorKey)).join('\n');
       });
   });

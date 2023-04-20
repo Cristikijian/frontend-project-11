@@ -9,6 +9,7 @@ export default {
       responseErr: 'Невозможно осуществить запрос',
       networkError: 'Ошибка сети',
       emptyField: 'Поле не должно быть пустым',
+      commonErr: 'Что-то пошло не так',
     },
     btn: 'Просмотр',
     feeds: 'Фиды',

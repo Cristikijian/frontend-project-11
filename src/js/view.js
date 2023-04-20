@@ -43,14 +43,13 @@ const renderFeeds = (feeds, i18, elements) => {
 };
 
 const renderModal = (state) => {
-  const {
-    id, title, body, link,
-  } = state.uiState.modal;
-  document.querySelector('.modal-title').textContent = title;
-  document.querySelector('.modal-body').textContent = body;
+  const selectedPost = state.posts.find(({ id }) => id === state.uiState.selectedPostId);
+
+  document.querySelector('.modal-title').textContent = selectedPost.title;
+  document.querySelector('.modal-body').textContent = selectedPost.description;
   const modalBtn = document.querySelector('.full-article');
-  modalBtn.href = link;
-  modalBtn.dataset.linkId = id;
+  modalBtn.href = selectedPost.link;
+  modalBtn.dataset.linkId = selectedPost.id;
 };
 
 const renderPosts = (posts, i18, state, elements) => {
@@ -140,13 +139,13 @@ export const render = ({
       elements.addBtn.disabled = state.isLoading;
       break;
     }
-    case 'uiState.modal': {
+    case 'uiState.selectedPostId': {
       renderModal(state);
       break;
     }
 
     case 'uiState.clickedLinksIds': {
-      const currentLink = document.getElementById(value[value.length - 1]);
+      const currentLink = document.getElementById([...value].pop());
       currentLink.classList.remove('fw-bold');
       currentLink.classList.add('fw-normal', 'link-secondary');
       break;
