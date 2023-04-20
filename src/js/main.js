@@ -8,47 +8,30 @@ import { setLocale } from 'yup';
 
 import { uniqBy } from 'lodash';
 
-import render from './view';
+import { render, initRender } from './view';
 import parser from './parser';
 import getFeed from './getFeed';
 
+const elements = {
+  formEl: document.querySelector('form'),
+  addBtn: document.querySelector('form button'),
+  input: document.getElementById('url-input'),
+  feedback: document.querySelector('.feedback'),
+  feedsContainer: document.querySelector('.feeds'),
+  postsContainer: document.querySelector('.posts'),
+  feedsCard: document.createElement('div'),
+  feedsCardBody: document.createElement('div'),
+  feedsCardTitle: document.createElement('h2'),
+  feedsListGroup: document.createElement('ul'),
+  postsCard: document.createElement('div'),
+  postsCardBody: document.createElement('div'),
+  postsCardTitle: document.createElement('h2'),
+  postsListGroup: document.createElement('ul'),
+  modal: document.getElementById('modal'),
+};
+
 const app = (i18) => {
-  const elements = {
-    formEl: document.querySelector('form'),
-    addBtn: document.querySelector('form button'),
-    input: document.getElementById('url-input'),
-    feedback: document.querySelector('.feedback'),
-    feedsContainer: document.querySelector('.feeds'),
-    postsContainer: document.querySelector('.posts'),
-    feedsCard: document.createElement('div'),
-    feedsCardBody: document.createElement('div'),
-    feedsCardTitle: document.createElement('h2'),
-    feedsListGroup: document.createElement('ul'),
-    postsCard: document.createElement('div'),
-    postsCardBody: document.createElement('div'),
-    postsCardTitle: document.createElement('h2'),
-    postsListGroup: document.createElement('ul'),
-    modal: document.getElementById('modal'),
-  };
-
-  elements.feedsCard.append(elements.feedsCardBody);
-  elements.feedsCard.classList.add('card', 'border-0');
-  elements.feedsCardBody.append(elements.feedsCardTitle);
-  elements.feedsCardBody.classList.add('card-body');
-  elements.feedsContainer.append(elements.feedsCard);
-  elements.feedsCard.append(elements.feedsListGroup);
-  elements.feedsCardTitle.classList.add('card-title', 'h4');
-  elements.feedsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
-
-  elements.postsCard.append(elements.postsCardBody);
-  elements.postsCard.classList.add('card', 'border-0');
-  elements.postsCardBody.append(elements.postsCardTitle);
-  elements.postsCardBody.classList.add('card-body');
-  elements.postsContainer.append(elements.postsCard);
-  elements.postsCard.append(elements.postsListGroup);
-  elements.postsCardTitle.classList.add('card-title', 'h4');
-  elements.postsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
-
+  initRender(elements);
   const state = {
     isLoading: false,
     form: {
@@ -59,7 +42,7 @@ const app = (i18) => {
     feeds: [],
     posts: [],
     uiState: {
-      clickedLinksIds: [],
+      clickedLinksIds: new Set(),
       modal: {
         title: '',
         body: '',
@@ -92,10 +75,6 @@ const app = (i18) => {
     }
   });
 
-  elements.modal.addEventListener('click', (e) => {
-    watchedState.uiState.clickedLinksIds.push(e.target.id);
-  });
-
   elements.postsListGroup.addEventListener('click', (e) => {
     if (e.target.tagName === 'BUTTON') {
       const { postId } = e.target.dataset;
@@ -108,10 +87,10 @@ const app = (i18) => {
         link: post.link,
         id: post.id,
       };
-      watchedState.uiState.clickedLinksIds.push(postId);
+      watchedState.uiState.clickedLinksIds.add(postId);
     }
     if (e.target.tagName === 'A') {
-      watchedState.uiState.clickedLinksIds.push(e.target.id);
+      watchedState.uiState.clickedLinksIds.add(e.target.id);
     }
   });
 
@@ -135,14 +114,12 @@ const app = (i18) => {
         if (successCb) {
           successCb();
         }
+        setTimeout(() => updatePosts(url), 5000);
       })
       .catch((err) => {
         // eslint-disable-next-line no-console
         console.error(err);
         if (errorCb) errorCb(err);
-      })
-      .finally(() => {
-        setTimeout(() => updatePosts(url), 5000);
       });
   };
 

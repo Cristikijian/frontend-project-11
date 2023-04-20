@@ -1,16 +1,44 @@
 /* eslint-disable no-param-reassign */
 
+export const initRender = (elements) => {
+  elements.feedsCard.append(elements.feedsCardBody);
+  elements.feedsCard.classList.add('card', 'border-0');
+  elements.feedsCardBody.append(elements.feedsCardTitle);
+  elements.feedsCardBody.classList.add('card-body');
+  elements.feedsContainer.append(elements.feedsCard);
+  elements.feedsCard.append(elements.feedsListGroup);
+  elements.feedsCardTitle.classList.add('card-title', 'h4');
+  elements.feedsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+  elements.postsCard.append(elements.postsCardBody);
+  elements.postsCard.classList.add('card', 'border-0');
+  elements.postsCardBody.append(elements.postsCardTitle);
+  elements.postsCardBody.classList.add('card-body');
+  elements.postsContainer.append(elements.postsCard);
+  elements.postsCard.append(elements.postsListGroup);
+  elements.postsCardTitle.classList.add('card-title', 'h4');
+  elements.postsListGroup.classList.add('list-group', 'border-0', 'rounded-0');
+};
+
 const renderFeeds = (feeds, i18, elements) => {
-  elements.feedsListGroup.innerHTML = feeds.reduce((result, feed) => {
-    // eslint-disable-next-line no-param-reassign
-    result += `
-      <li class="list-group-item border-0 border-end-0">
-        <h3 class="h6 m-0">${feed.title}</h3>
-        <p class="m-0 small text-black-50">${feed.description}</p>
-      </li>
-    `;
-    return result;
-  }, '');
+  const items = feeds.map((feed) => {
+    const feedListElement = document.createElement('li');
+    const titleNode = document.createElement('h3');
+    const descriptionNode = document.createElement('p');
+
+    feedListElement.classList.add('list-group-item', 'border-0', 'border-end-0');
+    titleNode.classList.add('h6', 'm-0');
+    descriptionNode.classList.add('m-0', 'small', 'text-black-50');
+    feedListElement.id = feed.id;
+    titleNode.textContent = feed.title;
+    descriptionNode.textContent = feed.description;
+    feedListElement.prepend(titleNode, descriptionNode);
+
+    console.log(feedListElement);
+
+    return feedListElement;
+  });
+  elements.feedsListGroup.replaceChildren(...items);
   elements.feedsCardTitle.textContent = i18('feeds');
 };
 
@@ -32,7 +60,7 @@ const renderPosts = (posts, i18, state, elements) => {
     const postLink = document.createElement('a');
 
     postListElement.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-    btn.innerHTML = i18('btn');
+    btn.textContent = i18('btn');
     btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     btn.type = 'button';
 
@@ -43,11 +71,11 @@ const renderPosts = (posts, i18, state, elements) => {
     btn.dataset.bsToggle = 'modal';
 
     postListElement.prepend(postLink, btn);
-    postLink.innerHTML = post.title;
+    postLink.textContent = post.title;
     postLink.rel = 'noopener noreferrer';
     postLink.target = '_blank';
 
-    if (state.uiState.clickedLinksIds.includes(post.id)) {
+    if (state.uiState.clickedLinksIds.has(post.id)) {
       postLink.classList.add('fw-normal', 'link-secondary');
     } else {
       postLink.classList.add('fw-bold');
@@ -87,7 +115,7 @@ const renderForm = (state, i18, elements) => {
   }
 };
 
-const render = ({
+export const render = ({
   path, value, state, i18, elements,
 }) => {
   switch (path) {
@@ -127,4 +155,3 @@ const render = ({
     default:
   }
 };
-export default render;
