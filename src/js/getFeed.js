@@ -4,14 +4,14 @@ const getFeed = (url) => axios.get(new URL(`https://allorigins.hexlet.app/get?di
   .then((response) => ({ data: response.data.contents }))
   .catch((err) => {
     if (!err) {
-      return 'errors.commonErr';
+      return { error: 'errors.commonErr' };
     }
     if (err.response) {
-      return 'errors.responseErr';
+      return { error: 'errors.responseErr' };
     } if (err.request) {
-      return 'errors.networkError';
+      return { error: 'errors.networkError' };
     }
-    return 'errors.commonErr';
+    return { error: 'errors.commonErr' };
   });
 
 export default getFeed;

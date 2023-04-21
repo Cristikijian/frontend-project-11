@@ -34,8 +34,6 @@ const renderFeeds = (feeds, i18, elements) => {
     descriptionNode.textContent = feed.description;
     feedListElement.prepend(titleNode, descriptionNode);
 
-    console.log(feedListElement);
-
     return feedListElement;
   });
   elements.feedsListGroup.replaceChildren(...items);

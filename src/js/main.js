@@ -147,7 +147,6 @@ const app = (i18) => {
       })
       .catch((err) => {
         watchedState.form.state = 'failed';
-        console.log(err);
         watchedState.form.error = err.errors.map((errorKey) => i18(errorKey)).join('\n');
       });
   });
