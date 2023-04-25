@@ -129,7 +129,7 @@ export const render = ({
       break;
     }
     case 'form.error': {
-      elements.feedback.textContent = state.form.error;
+      elements.feedback.textContent = i18(state.form.error);
       break;
     }
     case 'isLoading': {
