@@ -49,7 +49,6 @@ const app = () => {
         state: 'filling',
         error: null,
       },
-      existedUrls: [],
       feeds: [],
       posts: [],
       uiState: {
@@ -94,11 +93,11 @@ const app = () => {
     });
 
     const validate = (field) => yup.string().trim().required().url()
-      .notOneOf(watchedState.existedUrls)
+      .notOneOf(watchedState.feeds.map((feed) => feed.link))
       .validate(field);
 
-    const updatePosts = (url) => {
-      getFeed(url)
+    const updatePosts = () => {
+      const promises = watchedState.feeds.map((feed) => getFeed(feed.link)
         .then((result) => {
           if (result.error) {
             throw new Error(result.error);
@@ -115,8 +114,9 @@ const app = () => {
         .catch((err) => {
           // eslint-disable-next-line no-console
           console.error(err);
-        })
-        .finally(() => setTimeout(() => updatePosts(url), TIMEOUT));
+        }));
+      Promise.all(promises)
+        .then(setTimeout(() => updatePosts(), TIMEOUT));
     };
 
     const loadPosts = (url) => {
@@ -137,13 +137,11 @@ const app = () => {
             id: uniqueId('post'),
           }));
 
-          watchedState.feeds = uniqBy([...watchedState.feeds, newFeed], 'link');
+          watchedState.feeds.push(newFeed);
           watchedState.posts = uniqBy([...watchedState.posts, ...newPosts], 'link');
 
           watchedState.isLoading = false;
           watchedState.form.state = 'success';
-          watchedState.existedUrls.push(url);
-          setTimeout(() => updatePosts(url), TIMEOUT);
         })
         .catch((err) => {
         // eslint-disable-next-line no-console
@@ -151,7 +149,6 @@ const app = () => {
           watchedState.isLoading = false;
           watchedState.form.state = 'failed';
           watchedState.form.error = err.message;
-          console.log(err.message);
         });
     };
 
@@ -171,6 +168,8 @@ const app = () => {
           watchedState.form.error = err.errors.pop();
         });
     });
+
+    setTimeout(() => updatePosts(), TIMEOUT);
   });
 };
 
